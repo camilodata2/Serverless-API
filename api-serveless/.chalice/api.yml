@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  MyApiGateway:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: MySimpleAPI
+
+  ApiRootResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref MyApiGateway
+      ParentId: !GetAtt MyApiGateway.RootResourceId
+      PathPart: 'v1'
+
+  GetItemsMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref MyApiGateway
+      ResourceId: !GetAtt ApiRootResource.Id
+      HttpMethod: 'GET'
+      AuthorizationType: 'NONE'
+      Integration:
+        Type: 'AWS_PROXY'
+        IntegrationHttpMethod: 'POST'
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionArn}/invocations
+          - { FunctionArn: !GetAtt GetItemsLambda.Arn }
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+
+  CreateItemMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref MyApiGateway
+      ResourceId: !GetAtt ApiRootResource.Id
+      HttpMethod: 'POST'
+      AuthorizationType: 'NONE'
+      Integration:
+        Type: 'AWS_PROXY'
+        IntegrationHttpMethod: 'POST'
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionArn}/invocations
+          - { FunctionArn: !GetAtt CreateItemLambda.Arn }
+      MethodResponses:
+        - StatusCode: 201
+          ResponseModels:
+            application/json: 'Empty'
+
+Resources:
+  GetItemsLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: 'your-lambda-code-bucket'
+        S3Key: 'getItemsLambda.zip' # Replace with your Lambda code details
+      Handler: 'index.handler'
+      Role: 'arn:aws:iam::your-role'
+      Runtime: 'python3.7' # Replace with your Lambda runtime
+      
+  CreateItemLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Code:
+        S3Bucket: 'your-lambda-code-bucket'
+        S3Key: 'createItemLambda.zip' # Replace with your Lambda code details
+      Handler: 'index.handler'
+      Role: 'arn:aws:iam::your-role'
+      Runtime: 'nodejs14.x' # Replace with your Lambda runtime
+
+Outputs:
+  ApiEndpoint:
+    Description: 'URL de la API recién creada'
+    Value: !Sub 'https://${MyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/v1'

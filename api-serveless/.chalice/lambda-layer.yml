@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation Template for Lambda Function with Lambda Layer
+
+Resources:
+  MyLambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: my-first-lambda-layer
+      Description: This's my first lambda-layer
+      Content:
+        S3Bucket: black-bucket-serverless
+        S3Key: black-bucket-serverless/model_deployment_package.zip
+      CompatibleRuntimes:
+        - python3.7
+        - python3.9
+        - python3.10
+        - python3.11
+
+  MyLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MyLambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: MyLambdaExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: my-lambda-function
+      Runtime: python3.9
+      Handler: index.handler
+      Timeout: 10
+      Role: !GetAtt MyLambdaExecutionRole.Arn
+      Layers:
+        - !Ref MyLambdaLayer
+
+  MyLambdaLayerPermission:
+    Type: AWS::Lambda::LayerVersionPermission
+    Properties:
+      Actions: lambda:GetLayerVersion
+      LayerVersionArn: !Ref MyLambdaLayer
+      Principal: '*'
+      OrganizationId: '*'
+      StatementId: lambda-layer-s3-access

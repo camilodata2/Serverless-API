@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Book",
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Título del libro"
+      },
+      "author": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Autor del libro"
+      },
+      "isbn": {
+        "type": "string",
+        "pattern": "^(?:ISBN(?:-13)?:?\\s)?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)97(?:8|9)(?:[0-9]{10}|[0-9]{13}|[0-9]{17}|[0-9X]{13})$",
+        "description": "Número ISBN válido"
+      },
+      "published_year": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Año de publicación"
+      },
+      "genre": {
+        "type": "string",
+        "description": "Género del libro"
+      }
+    },
+    "required": ["title", "author", "published_year"]
+  }
+  

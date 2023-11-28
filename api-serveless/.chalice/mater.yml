@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: 'Base de datos my-first-chalice'
+        Parameters:
+          - DynamoName
+          - DynamoKey
+      -
+        Label:
+          default: 'Función Lambda Layer'
+        Parameters:
+          - LambdaName
+          - LambdaRuntime
+          - LambdaBucket
+          - ZipName
+    ParameterLabels:
+      DynamoName:
+        default: 'Nombre de la tabla de la base de datos'
+      DynamoKey:
+        default: 'Nombre de la llave'
+      LambdaName:
+        default: 'Ingrese el nombre de la capa de Lambda'
+      LambdaRuntime:
+        default: 'Seleccione el run-time'
+      LambdaBucket:
+        default: 'Ingrese el nombre del bucket'
+      ZipName:
+        default: 'Ingrese el nombre del archivo .zip'
+
+Parameters:
+  DynamoName:
+    Description: Nombre de la tabla de la base de datos
+    Type: String
+  DynamoKey:
+    Description: Nombre de la llave
+    Type: String
+  LambdaName:
+    Description: Nombre de la capa de Lambda
+    Type: String
+  LambdaRuntime:
+    Description: Runtime de la capa de Lambda
+    Type: String
+    Default: python3.7
+    AllowedValues:
+      - python3.7
+      - nodejs12.x
+      - java8
+      - dotnetcore2.1
+      - python2.7
+  LambdaBucket:
+    Description: Nombre del bucket
+    Type: String
+  ZipName:
+    Description: Nombre del archivo .zip
+    Type: String
+
+Resources:
+  Dynamo:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: 'URL_de_tu_archivo_yml_para_DynamoDB_en_S3'
+      Parameters:
+        DynamoName: !Ref DynamoName
+        DynamoKey: !Ref DynamoKey
+  api:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: lambda
+    Properties:
+       TemplateURL: 'URL_de_tu_archivo_yml'   
+        Parameters:
+          LambdaFunction: !GetAtt lambda.Outputs.LambdaFunction
+  Lambda:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: 'URL_de_tu_archivo_yml_para_la_capa_Lambda_en_S3'
+      Parameters:
+        LambdaName: !Ref LambdaName
+        LambdaRuntime: !Ref LambdaRuntime
+        LambdaBucket: !Ref LambdaBucket
+        ZipName: !Ref ZipName
